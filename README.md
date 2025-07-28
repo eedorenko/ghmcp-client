@@ -57,6 +57,7 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
 - List available GitHub tools
 - Create pull requests with GitHub Copilot coding agent assistance
 - Interactive command-line interface
+- **NEW: Chat Mode** - Conversational interface with natural language support
 - Proper error handling and logging
 
 ## Prerequisites
@@ -84,6 +85,23 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
    ```
 
 ## Usage
+
+### Chat Mode (NEW!)
+
+Experience the new conversational interface:
+
+```bash
+python github_mcp_client.py --chat
+```
+
+Chat naturally with the assistant:
+- "hello" - Get started with a friendly greeting
+- "create a pull request" - Get guided through PR creation
+- "/help" - See available commands
+- "/tools" - List GitHub MCP tools
+- "/quit" - Exit chat mode
+
+See [CHAT_GUIDE.md](CHAT_GUIDE.md) for detailed chat mode documentation.
 
 ### Interactive Mode (Recommended)
 
