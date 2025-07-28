@@ -76,10 +76,6 @@ async def example_usage():
         print(f"Title: {example_title}")
         print(f"Problem: {example_problem[:100]}...")
         
-        # Uncomment the following lines to actually create a PR
-        # WARNING: This will create a real PR if the repository exists!
-        
-        """
         print("\nCreating pull request with Copilot...")
         result = await client.create_pull_request_with_copilot(
             owner=example_owner,
@@ -92,10 +88,6 @@ async def example_usage():
         print("\n✅ Pull request creation result:")
         import json
         print(json.dumps(result, indent=2))
-        """
-        
-        print("\n⚠️  Example PR creation is commented out.")
-        print("Uncomment the code above and set real values to create an actual PR.")
         
     except Exception as e:
         print(f"\n❌ Error: {e}")
