@@ -11,7 +11,7 @@ from github_mcp_client import GitHubMCPClient
 
 ## add consttants for example_owner , example_repo, example_title,  example_problem
 example_owner = "eedorenko"
-example_repo = "your-repository-name"
+example_repo = "ghmcp-client"
 example_title = "feat: Add example feature with Copilot"
 example_problem = """
 Add a simple HTTP server endpoint that returns a JSON response with the current time.
