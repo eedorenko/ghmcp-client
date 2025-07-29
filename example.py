@@ -55,22 +55,7 @@ async def example_usage():
         print("Example: Creating a PR with Copilot")
         print("="*50)
         
-        # Note: This is just an example - you should use real values
-        example_owner = "your-github-username"
-        example_repo = "your-repository-name"
-        example_title = "feat: Add example feature with Copilot"
-        example_problem = """
-        Add a simple HTTP server endpoint that returns a JSON response with the current time.
-        
-        Requirements:
-        - Create a new file `time_server.py`
-        - Use Flask or FastAPI
-        - Add a GET /time endpoint
-        - Return current UTC time in ISO format
-        - Include basic error handling
-        - Add proper documentation
-        """
-        
+        # Note: Using the actual repository details from the current project
         print(f"Owner: {example_owner}")
         print(f"Repo: {example_repo}")
         print(f"Title: {example_title}")
