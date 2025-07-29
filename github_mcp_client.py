@@ -128,11 +128,28 @@ class GitHubMCPClient:
             
             if result.isError:
                 result_dict["error"] = "Tool execution failed"
+                error_messages = []
+                
                 # Extract error messages from content
                 for content_item in result.content:
                     if hasattr(content_item, 'text'):
-                        result_dict["error"] = content_item.text
+                        error_text = content_item.text
+                        error_messages.append(error_text)
+                        
+                        # Parse common GitHub API errors for prettier messages
+                        if "401: Unauthorized" in error_text:
+                            result_dict["error"] = "GitHub API returned 401 Unauthorized. Please check:\n- Your GitHub token is valid and not expired\n- Token has the required permissions for this repository\n- Repository exists and you have access to it"
+                        elif "404: Not Found" in error_text:
+                            result_dict["error"] = f"Repository '{arguments.get('owner', 'unknown')}/{arguments.get('repo', 'unknown')}' not found. Please verify:\n- Repository name is spelled correctly\n- Repository exists\n- You have access to this repository"
+                        elif "403: Forbidden" in error_text:
+                            result_dict["error"] = "Access forbidden. Your GitHub token may not have the required permissions for this operation."
+                        else:
+                            result_dict["error"] = error_text
                         break
+                
+                if not error_messages:
+                    result_dict["error"] = "Tool execution failed with unknown error"
+                    
             else:
                 # Process content items
                 for content_item in result.content:
@@ -155,7 +172,12 @@ class GitHubMCPClient:
             
         except Exception as e:
             logger.error(f"Failed to call tool '{tool_name}' on remote server: {e}")
-            raise
+            # Return a formatted error instead of re-raising
+            return {
+                "success": False,
+                "error": f"Failed to execute tool '{tool_name}': {str(e)}",
+                "content": []
+            }
     
     async def create_pull_request_with_copilot(
         self,

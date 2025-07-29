@@ -70,7 +70,38 @@ async def example_usage():
             base_ref="main"  # or whatever your default branch is
         )
         
-        print("\n✅ Pull request creation result:")
+        # Check if the operation was successful
+        if result.get("success", False):
+            print("\n✅ Pull request creation successful!")
+            if result.get("content"):
+                for content_item in result["content"]:
+                    if content_item.get("type") == "text":
+                        print(f"📝 {content_item['text']}")
+            
+            if result.get("structured"):
+                print("\n📊 Structured result:")
+                import json
+                print(json.dumps(result["structured"], indent=2))
+        else:
+            print(f"\n❌ Pull request creation failed!")
+            error_msg = result.get("error", "Unknown error occurred")
+            print(f"🚫 Error: {error_msg}")
+            
+            # Provide helpful suggestions
+            if "not found" in error_msg.lower() or "404" in error_msg:
+                print(f"\n💡 Suggestions:")
+                print(f"   • Check if the repository '{example_owner}/{example_repo}' exists")
+                print(f"   • Verify the owner name is correct (current: '{example_owner}')")
+                print(f"   • Make sure your GitHub token has access to this repository")
+                print(f"   • If it's a private repository, ensure your token has private repo permissions")
+            elif "unauthorized" in error_msg.lower() or "401" in error_msg:
+                print(f"\n💡 Suggestions:")
+                print(f"   • Verify your GITHUB_TOKEN environment variable is set correctly")
+                print(f"   • Check that your GitHub token hasn't expired")
+                print(f"   • Ensure your token has the required scopes (repo, write:repo)")
+                print(f"   • Try regenerating your GitHub token if needed")
+        
+        print(f"\n📋 Full result:")
         import json
         print(json.dumps(result, indent=2))
         
