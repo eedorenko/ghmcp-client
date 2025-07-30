@@ -1,6 +1,6 @@
 # GitHub MCP Client - Makefile
 
-.PHONY: help setup install test interactive example clean
+.PHONY: help setup install test interactive tui example demo clean
 
 help:
 	@echo "GitHub MCP Client"
@@ -10,8 +10,10 @@ help:
 	@echo "  setup       - Run initial setup wizard"
 	@echo "  install     - Install Python dependencies"
 	@echo "  test        - Test the setup and connection"
-	@echo "  interactive - Run client in interactive mode"
+	@echo "  tui         - Run enhanced TUI mode (recommended)"
+	@echo "  interactive - Run basic interactive mode"
 	@echo "  example     - Run usage example"
+	@echo "  demo        - Show TUI features demo"
 	@echo "  clean       - Clean up generated files"
 	@echo ""
 	@echo "Environment:"
@@ -29,13 +31,21 @@ test:
 	@echo "🧪 Testing setup..."
 	python test_setup.py
 
+tui:
+	@echo "🌟 Starting enhanced TUI..."
+	python github_mcp_client.py --tui
+
 interactive:
-	@echo "💬 Starting interactive client..."
+	@echo "💬 Starting basic interactive client..."
 	python github_mcp_client.py --interactive
 
 example:
 	@echo "📝 Running example..."
 	python example.py
+
+demo:
+	@echo "🎬 Running TUI demo..."
+	python demo_tui.py
 
 clean:
 	@echo "🧹 Cleaning up..."

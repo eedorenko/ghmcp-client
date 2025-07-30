@@ -368,14 +368,30 @@ async def main():
     
     if len(sys.argv) > 1 and sys.argv[1] == "--interactive":
         await interactive_cli()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--tui":
+        # Enhanced TUI mode
+        try:
+            from rich_cli import run_tui
+            await run_tui()
+        except ImportError as e:
+            print("❌ TUI mode requires the 'rich' library.")
+            print("Install it with: pip install rich>=13.7.0")
+            print(f"Error: {e}")
+        except Exception as e:
+            print(f"❌ Error launching TUI: {e}")
     elif len(sys.argv) > 1 and sys.argv[1] == "--help":
         print("GitHub MCP Client")
         print("================")
         print()
         print("Usage:")
-        print("  python github_mcp_client.py --interactive    # Interactive mode")
-        print("  python github_mcp_client.py --help          # Show this help")
-        print("  python github_mcp_client.py                 # Example usage")
+        print("  python github_mcp_client.py --tui           # Enhanced TUI mode (recommended)")
+        print("  python github_mcp_client.py --interactive   # Basic interactive mode")
+        print("  python github_mcp_client.py --help         # Show this help")
+        print("  python github_mcp_client.py                # Example usage")
+        print()
+        print("Modes:")
+        print("  --tui          Enhanced Terminal User Interface with rich formatting")
+        print("  --interactive  Basic command-line interface")
         print()
         print("Connection:")
         print("  Connects to GitHub's remote MCP server at api.githubcopilot.com/mcp/")
@@ -427,8 +443,10 @@ async def main():
             copilot_tool = next((t for t in tools if t['name'] == 'create_pull_request_with_copilot'), None)
             if copilot_tool:
                 print(f"\n✅ Found create_pull_request_with_copilot tool!")
-                print("\nTo use the tool interactively, run:")
-                print("python github_mcp_client.py --interactive")
+                print("\nTo use the tool, you have several options:")
+                print("🌟 python github_mcp_client.py --tui          # Enhanced TUI (recommended)")
+                print("💬 python github_mcp_client.py --interactive  # Basic interactive mode")
+                print("📝 See example.py for programmatic usage")
             else:
                 print(f"\n⚠️  create_pull_request_with_copilot tool not found.")
                 print("Available tools are listed above.")
