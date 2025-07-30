@@ -11,7 +11,8 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
 - Connect to GitHub's remote MCP server (no local installation required)
 - List available GitHub tools
 - Create pull requests with GitHub Copilot coding agent assistance
-- Interactive command-line interface
+- **🌟 Enhanced Terminal User Interface (TUI)** with rich formatting and interactive experience
+- Interactive command-line interface (basic mode)
 - Proper error handling and logging
 
 ## Prerequisites
@@ -85,9 +86,27 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
 
 ## Usage
 
-### Interactive Mode (Recommended)
+## Usage
 
-Run the client in interactive mode for guided usage:
+### Enhanced TUI Mode (Recommended) 🌟
+
+Run the client with the beautiful, interactive Terminal User Interface:
+
+```bash
+python github_mcp_client.py --tui
+```
+
+The Enhanced TUI provides:
+- 🎨 Beautiful visual interface with colors and formatting
+- 📝 Interactive forms with real-time validation
+- 📊 Live progress indicators during operations
+- 🌈 Syntax highlighting for code and JSON
+- 🛠️ Enhanced error handling with helpful suggestions
+- ⚡ Professional terminal experience
+
+### Basic Interactive Mode
+
+Run the client in basic interactive mode for guided usage:
 
 ```bash
 python github_mcp_client.py --interactive
@@ -112,6 +131,14 @@ View usage instructions:
 
 ```bash
 python github_mcp_client.py --help
+```
+
+### Demo
+
+See a demonstration of the Enhanced TUI features:
+
+```bash
+python demo_tui.py
 ```
 
 ## Environment Variables
@@ -200,6 +227,7 @@ ghmcp-client/
 
 - `mcp`: Official Model Context Protocol Python SDK
 - `python-dotenv`: Environment variable loading
+- `rich`: Enhanced terminal interface and formatting (for TUI mode)
 
 ## References
 
