@@ -38,6 +38,51 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
    export GITHUB_TOKEN="your_github_token"
    ```
 
+## Usage
+
+### Interactive Mode (Recommended)
+
+# GitHub MCP Client
+
+A Python client for GitHub's remote Model Context Protocol (MCP) server, focused on the `create_pull_request_with_copilot` tool for AI-assisted pull request creation.
+
+## Overview
+
+This client connects directly to GitHub's remote MCP server at `api.githubcopilot.com/mcp/` using the official [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) to leverage GitHub Copilot's coding agent for automated pull request creation. It's based on the reference implementation from the [MCP quick start resources](https://github.com/modelcontextprotocol/quickstart-resources/tree/main/mcp-client-python).
+
+## Features
+
+- Connect to GitHub's remote MCP server using the official MCP Python SDK
+- No local installation required - connects directly to GitHub's hosted service
+- List available GitHub tools
+- Create pull requests with GitHub Copilot coding agent assistance
+- Interactive command-line interface
+- Proper error handling and logging
+
+## Prerequisites
+
+1. **GitHub Token**: Set up a GitHub personal access token with appropriate permissions
+   ```bash
+   export GITHUB_TOKEN="your_github_token_here"
+   ```
+
+2. **Python Dependencies**: Install required packages
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Installation
+
+1. Clone or download this repository
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set your GitHub token:
+   ```bash
+   export GITHUB_TOKEN="your_github_token"
+   ```
+
 ## Quick Start
 
 ### Hello World Program
@@ -56,6 +101,8 @@ This is a simple Python hello world program.
 ```
 
 ### GitHub MCP Client Usage
+
+For the main GitHub MCP client functionality:
 
 #### Interactive Mode (Recommended)
 
