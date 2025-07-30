@@ -169,6 +169,51 @@ class GitHubMCPTUI:
         self.console.print(table)
         self.console.print()
         
+    async def show_repository_browser(self, owner: str, repo: str):
+        """Display a simulated repository file browser."""
+        self.console.print(Panel("🌳 Repository Browser", style="blue"))
+        
+        # Simulate a basic file tree (in real implementation, this could fetch from GitHub API)
+        tree = Tree(f"📁 {owner}/{repo}")
+        
+        # Common repository structure
+        tree.add("📄 README.md")
+        tree.add("📄 .gitignore")
+        
+        src_folder = tree.add("📁 src/")
+        src_folder.add("📄 main.py")
+        src_folder.add("📄 __init__.py")
+        src_folder.add("📁 utils/").add("📄 helpers.py")
+        
+        docs_folder = tree.add("📁 docs/")
+        docs_folder.add("📄 API.md")
+        docs_folder.add("📄 INSTALL.md")
+        
+        tests_folder = tree.add("📁 tests/")
+        tests_folder.add("📄 test_main.py")
+        tests_folder.add("📄 conftest.py")
+        
+        tree.add("📄 requirements.txt")
+        tree.add("📄 setup.py")
+        
+        browser_panel = Panel(tree, title="📂 Repository Structure", border_style="cyan")
+        self.console.print(browser_panel)
+        self.console.print()
+        
+        # Show file statistics
+        stats_table = Table(box=box.SIMPLE)
+        stats_table.add_column("File Type", style="cyan")
+        stats_table.add_column("Count", justify="right", style="green")
+        
+        stats_table.add_row("Python files", "3")
+        stats_table.add_row("Documentation", "3")
+        stats_table.add_row("Test files", "2")
+        stats_table.add_row("Configuration", "3")
+        
+        stats_panel = Panel(stats_table, title="📊 File Statistics", border_style="yellow")
+        self.console.print(stats_panel)
+        self.console.print()
+        
     def get_repository_input(self) -> Tuple[Optional[str], Optional[str]]:
         """Get repository owner and name with validation."""
         self.console.print(Panel("📁 Repository Information", style="blue"))
@@ -490,6 +535,9 @@ class GitHubMCPTUI:
             if not owner or not repo:
                 self.display_status("Repository setup cancelled", "warning")
                 return
+                
+            # Show repository browser
+            await self.show_repository_browser(owner, repo)
                 
             # Step 4: Get PR details
             self.console.print(Rule("[bold blue]✏️  Pull Request Configuration[/bold blue]"))
