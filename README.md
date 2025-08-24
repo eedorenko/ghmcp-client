@@ -85,6 +85,34 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
 
 ## Usage
 
+### Quick Start - Hello World Shell Demo
+
+Run the Hello World shell demo to get started:
+
+```bash
+./hello_world.sh
+```
+
+Or use the make target:
+
+```bash
+make hello
+```
+
+The Hello World shell script provides:
+- Basic environment validation
+- Colorized output and user-friendly interface
+- Integration demonstration with the GitHub MCP client
+- Multiple usage modes (demo, info, interactive)
+
+Shell script options:
+```bash
+./hello_world.sh --help     # Show help
+./hello_world.sh --version  # Show version
+./hello_world.sh --demo     # Run demo only
+./hello_world.sh --info     # Show client info only
+```
+
 ### Interactive Mode (Recommended)
 
 Run the client in interactive mode for guided usage:
@@ -191,6 +219,7 @@ Logging is configured to show:
 ```
 ghmcp-client/
 ├── github_mcp_client.py    # Main client implementation
+├── hello_world.sh          # Hello World shell demo script
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file
 └── .env.example          # Environment variable template

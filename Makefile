@@ -1,6 +1,6 @@
 # GitHub MCP Client - Makefile
 
-.PHONY: help setup install test interactive example clean
+.PHONY: help setup install test interactive example hello clean
 
 help:
 	@echo "GitHub MCP Client"
@@ -12,6 +12,7 @@ help:
 	@echo "  test        - Test the setup and connection"
 	@echo "  interactive - Run client in interactive mode"
 	@echo "  example     - Run usage example"
+	@echo "  hello       - Run Hello World shell demo"
 	@echo "  clean       - Clean up generated files"
 	@echo ""
 	@echo "Environment:"
@@ -36,6 +37,10 @@ interactive:
 example:
 	@echo "📝 Running example..."
 	python example.py
+
+hello:
+	@echo "👋 Running Hello World shell demo..."
+	./hello_world.sh
 
 clean:
 	@echo "🧹 Cleaning up..."
