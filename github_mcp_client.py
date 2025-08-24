@@ -13,7 +13,9 @@ import asyncio
 import json
 import logging
 import os
+import re
 import sys
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
@@ -46,6 +48,8 @@ class GitHubMCPClient:
         self.remote_url = "https://api.githubcopilot.com/mcp/"
         self.session: Optional[ClientSession] = None
         self.available_tools: List[Dict[str, Any]] = []
+        self.chat_history: List[Dict[str, str]] = []
+        self.chat_context: Dict[str, Any] = {}
         
     async def connect_to_github_mcp_server(self) -> None:
         """
@@ -226,6 +230,251 @@ class GitHubMCPClient:
                 
         except Exception as e:
             logger.error(f"Error closing connection: {e}")
+    
+    def add_to_chat_history(self, role: str, content: str) -> None:
+        """Add a message to the chat history."""
+        self.chat_history.append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        # Keep only last 20 messages to avoid memory issues
+        if len(self.chat_history) > 20:
+            self.chat_history = self.chat_history[-20:]
+    
+    def get_chat_history_summary(self) -> str:
+        """Get a summary of recent chat history for context."""
+        if not self.chat_history:
+            return "No previous conversation."
+        
+        # Return last 5 messages as context
+        recent_messages = self.chat_history[-5:]
+        summary = "Recent conversation:\n"
+        for msg in recent_messages:
+            summary += f"{msg['role']}: {msg['content'][:100]}{'...' if len(msg['content']) > 100 else ''}\n"
+        return summary
+    
+    def parse_chat_command(self, user_input: str) -> Dict[str, Any]:
+        """Parse user input for chat commands."""
+        user_input = user_input.strip()
+        
+        # Chat commands start with /
+        if user_input.startswith('/'):
+            parts = user_input[1:].split(' ', 1)
+            command = parts[0].lower()
+            args = parts[1] if len(parts) > 1 else ""
+            
+            return {
+                "type": "command",
+                "command": command,
+                "args": args
+            }
+        
+        # Check if user is asking for tool execution
+        tool_patterns = [
+            (r"create.*pull.*request|make.*pr|new.*pr", "create_pr"),
+            (r"list.*tools|show.*tools|what.*tools", "list_tools"),
+            (r"help|assistance", "help"),
+        ]
+        
+        user_input_lower = user_input.lower()
+        for pattern, action in tool_patterns:
+            if re.search(pattern, user_input_lower):
+                return {
+                    "type": "tool_request",
+                    "action": action,
+                    "original_input": user_input
+                }
+        
+        # Default to conversation
+        return {
+            "type": "conversation",
+            "content": user_input
+        }
+    
+    async def handle_chat_command(self, command: str, args: str) -> str:
+        """Handle chat commands."""
+        if command == "help":
+            return self._get_chat_help()
+        elif command == "tools":
+            if not self.session:
+                return "Sorry, I can't list tools without a connection to the GitHub MCP server. Please check your GITHUB_TOKEN and connection."
+            try:
+                tools = await self.list_tools()
+                tools_list = "\n".join([f"  • {tool['name']}: {tool['description']}" for tool in tools])
+                return f"Available tools:\n{tools_list}"
+            except Exception as e:
+                return f"Error listing tools: {e}"
+        elif command == "history":
+            return self.get_chat_history_summary()
+        elif command == "clear":
+            self.chat_history.clear()
+            return "Chat history cleared."
+        elif command == "context":
+            if args:
+                # Set context
+                try:
+                    context_data = json.loads(args)
+                    self.chat_context.update(context_data)
+                    return f"Context updated: {list(context_data.keys())}"
+                except json.JSONDecodeError:
+                    return "Invalid JSON format for context. Use: /context {\"key\": \"value\"}"
+            else:
+                # Show current context
+                return f"Current context: {json.dumps(self.chat_context, indent=2)}"
+        elif command == "quit" or command == "exit":
+            return "exit_chat"
+        else:
+            return f"Unknown command: /{command}. Type /help for available commands."
+    
+    def _get_chat_help(self) -> str:
+        """Get help text for chat mode."""
+        return """
+GitHub MCP Chat Commands:
+========================
+
+/help                    - Show this help message
+/tools                   - List available MCP tools
+/history                 - Show recent chat history
+/clear                   - Clear chat history
+/context [json]          - Set/view conversation context
+/quit or /exit           - Exit chat mode
+
+Tool Requests:
+- "create a pull request" - Guide you through PR creation
+- "list tools"           - Show available tools
+- "help"                 - General assistance
+
+You can also have natural conversations about GitHub, coding, or ask questions!
+        """
+    
+    async def process_chat_input(self, user_input: str) -> str:
+        """Process user input in chat mode and return response."""
+        # Add user message to history
+        self.add_to_chat_history("user", user_input)
+        
+        # Parse the input
+        parsed = self.parse_chat_command(user_input)
+        
+        try:
+            if parsed["type"] == "command":
+                response = await self.handle_chat_command(parsed["command"], parsed["args"])
+            elif parsed["type"] == "tool_request":
+                response = await self._handle_tool_request(parsed)
+            else:
+                # Regular conversation - provide helpful response
+                response = self._generate_conversation_response(parsed["content"])
+            
+            # Add assistant response to history
+            if response != "exit_chat":
+                self.add_to_chat_history("assistant", response)
+            
+            return response
+            
+        except Exception as e:
+            error_msg = f"Error processing request: {e}"
+            self.add_to_chat_history("assistant", error_msg)
+            return error_msg
+    
+    async def _handle_tool_request(self, parsed: Dict[str, Any]) -> str:
+        """Handle tool execution requests from chat."""
+        action = parsed["action"]
+        
+        if action == "list_tools":
+            if not self.session:
+                return "Sorry, I can't list tools without a connection to the GitHub MCP server. Please check your GITHUB_TOKEN and connection."
+            
+            try:
+                tools = await self.list_tools()
+                return f"Available tools ({len(tools)}):\n" + "\n".join([f"  • {t['name']}: {t['description']}" for t in tools])
+            except Exception as e:
+                return f"Error listing tools: {e}"
+        
+        elif action == "create_pr":
+            if not self.session:
+                return """I'd love to help you create a pull request, but I need a connection to the GitHub MCP server.
+
+Please:
+1. Set your GITHUB_TOKEN environment variable
+2. Restart the chat mode
+3. Then I can help you create PRs with GitHub Copilot!
+
+For now, I can provide guidance on PR creation best practices if you'd like."""
+            
+            return """To create a pull request, I need some information:
+            
+Please provide:
+1. Repository owner
+2. Repository name  
+3. Pull request title
+4. Problem statement (what you want to implement)
+5. Base branch (optional)
+
+You can provide this in natural language or use the format:
+"Create PR for owner/repo with title 'Your Title' to implement: Your problem statement"
+            """
+        
+        elif action == "help":
+            return self._get_chat_help()
+        
+        return "I understand you want to use a tool, but I need more specific information."
+    
+    def _generate_conversation_response(self, content: str) -> str:
+        """Generate a conversational response."""
+        content_lower = content.lower()
+        
+        # Context-aware responses
+        if "github" in content_lower and "mcp" in content_lower:
+            return """I'm a GitHub MCP (Model Context Protocol) client! I can help you:
+
+• Connect to GitHub's MCP server
+• Create pull requests with AI assistance
+• List and use available GitHub tools
+• Provide information about MCP and GitHub integration
+
+What would you like to know or do?"""
+        
+        elif "pull request" in content_lower or "pr" in content_lower:
+            return """I can help you create pull requests with GitHub Copilot assistance! 
+
+To create a PR, I need:
+- Repository (owner/name)
+- Title for the PR
+- Problem statement describing what to implement
+
+Would you like to start creating a pull request?"""
+        
+        elif "tools" in content_lower or "what can you do" in content_lower:
+            return """I can access GitHub's MCP tools! Use '/tools' to see what's available.
+
+Common things I can help with:
+• Creating pull requests with AI
+• Listing repository information
+• GitHub API interactions
+• Copilot-assisted coding
+
+What specific task would you like help with?"""
+        
+        elif any(greeting in content_lower for greeting in ["hello", "hi", "hey"]):
+            return """Hello! I'm your GitHub MCP assistant. I can help you:
+
+• Create AI-assisted pull requests
+• Access GitHub tools via MCP
+• Answer questions about GitHub and development
+
+What would you like to work on today?"""
+        
+        else:
+            # Generic helpful response
+            return f"""I'm here to help with GitHub and MCP-related tasks. You mentioned: "{content[:100]}{'...' if len(content) > 100 else ''}"
+
+I can help you:
+• Create pull requests (/tools to see available options)
+• Access GitHub via MCP protocol
+• Answer questions about development
+
+Type /help for commands or ask me anything specific!"""
 
 
 async def interactive_cli():
@@ -363,19 +612,108 @@ async def interactive_cli():
         await client.close()
 
 
+async def chat_mode():
+    """Interactive chat mode for the GitHub MCP client."""
+    print("GitHub MCP Chat Mode")
+    print("===================")
+    print("💬 Welcome! I'm your GitHub MCP assistant.")
+    print("   Type /help for commands or just chat naturally!")
+    print("   Type /quit to exit.")
+    print()
+    
+    # Initialize client
+    client = None
+    try:
+        client = GitHubMCPClient()
+        
+        print("🌐 Connecting to GitHub MCP server...")
+        await client.connect_to_github_mcp_server()
+        print("✅ Connected! Ready to chat.")
+        print()
+        
+    except Exception as e:
+        print(f"❌ Connection failed: {e}")
+        print("\nI can still chat with you about GitHub and development,")
+        print("but I won't be able to execute tools without a connection.")
+        print("Make sure GITHUB_TOKEN is set for full functionality.")
+        print()
+        
+        # Create a client without connection for basic chat
+        if client:
+            try:
+                await client.close()
+            except:
+                pass
+        
+        try:
+            client = GitHubMCPClient()
+            client.session = None  # Indicate no connection
+        except Exception as e2:
+            print(f"❌ Cannot initialize client: {e2}")
+            return
+    
+    # Chat loop
+    try:
+        while True:
+            try:
+                # Get user input
+                user_input = input("You: ").strip()
+                
+                if not user_input:
+                    continue
+                
+                # Process the input
+                response = await client.process_chat_input(user_input)
+                
+                # Check for exit
+                if response == "exit_chat":
+                    print("\n👋 Goodbye! Thanks for chatting!")
+                    break
+                
+                # Display response
+                print(f"\n🤖 Assistant: {response}\n")
+                
+            except EOFError:
+                print("\n\n👋 Goodbye!")
+                break
+            except KeyboardInterrupt:
+                print("\n\n👋 Goodbye!")
+                break
+                
+    except Exception as e:
+        print(f"\n❌ Chat error: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        if client and client.session:
+            try:
+                await client.close()
+            except:
+                pass
+
+
 async def main():
     """Main entry point."""
     
-    if len(sys.argv) > 1 and sys.argv[1] == "--interactive":
+    if len(sys.argv) > 1 and sys.argv[1] == "--chat":
+        await chat_mode()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--interactive":
         await interactive_cli()
     elif len(sys.argv) > 1 and sys.argv[1] == "--help":
         print("GitHub MCP Client")
         print("================")
         print()
         print("Usage:")
+        print("  python github_mcp_client.py --chat          # Chat mode (NEW!)")
         print("  python github_mcp_client.py --interactive    # Interactive mode")
         print("  python github_mcp_client.py --help          # Show this help")
         print("  python github_mcp_client.py                 # Example usage")
+        print()
+        print("Chat Mode:")
+        print("  New conversational interface with natural language")
+        print("  - Chat naturally about GitHub and development")
+        print("  - Use commands like /help, /tools, /quit")
+        print("  - Request tool execution through conversation")
         print()
         print("Connection:")
         print("  Connects to GitHub's remote MCP server at api.githubcopilot.com/mcp/")
@@ -396,6 +734,8 @@ async def main():
         print()
         print("This example demonstrates connecting to the GitHub MCP remote server")
         print("and listing available tools.")
+        print()
+        print("💡 NEW: Try the chat mode with: python github_mcp_client.py --chat")
         print()
         
         try:
