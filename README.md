@@ -13,6 +13,7 @@ This client connects directly to GitHub's remote MCP server at `api.githubcopilo
 - Create pull requests with GitHub Copilot coding agent assistance
 - Interactive command-line interface
 - Proper error handling and logging
+- **Simple Time Server**: HTTP API endpoint for getting current UTC time
 
 ## Prerequisites
 
@@ -200,6 +201,48 @@ ghmcp-client/
 
 - `mcp`: Official Model Context Protocol Python SDK
 - `python-dotenv`: Environment variable loading
+- `fastapi`: Web framework for the time server API
+
+## Simple Time Server
+
+The repository includes a simple HTTP time server that provides a REST API for getting the current UTC time.
+
+### Features
+
+- **GET /time**: Returns current UTC time in ISO format
+- **GET /health**: Health check endpoint
+- **GET /docs**: Interactive API documentation (Swagger UI)
+- **GET /**: API information and available endpoints
+
+### Usage
+
+```bash
+# Start the time server
+python time_server.py
+
+# Server runs on http://localhost:8000
+# Access API documentation at http://localhost:8000/docs
+```
+
+### Example Response
+
+```json
+{
+    "current_time": "2024-01-15T10:30:45.123456Z",
+    "timezone": "UTC",
+    "timestamp": 1705316245.123456
+}
+```
+
+### Testing
+
+```bash
+# Run the time server tests
+python test_time_server.py
+
+# Test the endpoint directly
+curl http://localhost:8000/time
+```
 
 ## References
 
