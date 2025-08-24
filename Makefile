@@ -10,6 +10,8 @@ help:
 	@echo "  setup       - Run initial setup wizard"
 	@echo "  install     - Install Python dependencies"
 	@echo "  test        - Test the setup and connection"
+	@echo "  test-hello  - Test hello world functionality"
+	@echo "  hello       - Run hello world program"
 	@echo "  interactive - Run client in interactive mode"
 	@echo "  example     - Run usage example"
 	@echo "  clean       - Clean up generated files"
@@ -28,6 +30,14 @@ install:
 test:
 	@echo "🧪 Testing setup..."
 	python test_setup.py
+
+test-hello:
+	@echo "👋 Testing hello world..."
+	python test_hello_world.py
+
+hello:
+	@echo "👋 Running hello world..."
+	python hello_world.py
 
 interactive:
 	@echo "💬 Starting interactive client..."
